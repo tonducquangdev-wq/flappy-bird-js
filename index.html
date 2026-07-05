@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tôn Đức Quang</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Background -->
+        <div id="background"></div>
+
+        <!-- Ống nước sẽ được thêm bằng JS vào đây -->
+        <div id="pipes-container"></div>
+
+        <!-- Chim -->
+        <div id="bird"></div>
+
+        <!-- UI Tầng 1: Đếm ngược, Thông báo chuyển màn -->
+        <div id="message-overlay" class="hidden">
+            <h1 id="message-text"></h1>
+        </div>
+
+        <!-- UI Tầng 2: Điểm số -->
+        <div id="score-board">
+            <div id="current-score">Điểm: 0</div>
+            <div id="high-score">Kỷ lục: 0</div>
+        </div>
+
+        <!-- UI Tầng 3: Menu Bắt đầu -->
+        <div id="start-screen" class="screen">
+            <h1>Flappy Bird</h1>
+            <p>Nhấn <strong>SPACE</strong> hoặc <strong>CLICK</strong> để bay lên</p>
+            <p>Nhấn <strong>P</strong> để Tạm dừng</p>
+            <button id="start-btn">BẮT ĐẦU CHƠI</button>
+        </div>
+
+        <!-- UI Tầng 4: Game Over -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>GAME OVER</h1>
+            <p class="score-display">Điểm của bạn: <span id="final-score">0</span></p>
+            <p class="score-display">Kỷ lục: <span id="final-high-score">0</span></p>
+            <button id="restart-btn">CHƠI LẠI</button>
+        </div>
+
+        <!-- UI Tầng 5: Win Game -->
+        <div id="win-screen" class="screen hidden">
+            <h1 class="blink">YOU WIN</h1>
+            <p class="score-display">Điểm của bạn: <span id="win-score">0</span></p>
+            <button id="win-restart-btn">CHƠI LẠI</button>
+        </div>
+        
+        <!-- Nút Pause (Hiển thị khi đang chơi) -->
+        <div id="pause-indicator" class="hidden">TẠM DỪNG</div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
