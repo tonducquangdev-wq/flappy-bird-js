@@ -24,7 +24,10 @@
 
         <!-- UI Tầng 2: Điểm số -->
         <div id="score-board">
-            <div id="current-score">Điểm: 0</div>
+            <div class="stats-group">
+                <div id="current-score">Điểm: 0</div>
+                <div id="speed-display">Tốc độ: 3x</div>
+            </div>
             <div id="high-score">Kỷ lục: 0</div>
         </div>
 
@@ -44,12 +47,8 @@
             <button id="restart-btn">CHƠI LẠI</button>
         </div>
 
-        <!-- UI Tầng 5: Win Game -->
-        <div id="win-screen" class="screen hidden">
-            <h1 class="blink">YOU WIN</h1>
-            <p class="score-display">Điểm của bạn: <span id="win-score">0</span></p>
-            <button id="win-restart-btn">CHƠI LẠI</button>
-        </div>
+        <!-- Hiệu ứng tăng độ khó -->
+        <div id="difficulty-popup" class="hidden">🔥 Tốc độ tăng!</div>
         
         <!-- Nút Pause (Hiển thị khi đang chơi) -->
         <div id="pause-indicator" class="hidden">TẠM DỪNG</div>

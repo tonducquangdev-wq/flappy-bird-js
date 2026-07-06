@@ -4,12 +4,12 @@ let vanTocChim = 0;  // Vận tốc rơi/nhảy của chim
 let trongLuc = 0.4;  // Trọng lực kéo chim xuống
 let diem = 0;        // Điểm số hiện tại
 let diemCaoNhat = 0; // Kỷ lục điểm cao nhất
-let manChoi = 1;     // Màn chơi hiện tại (1 hoặc 2)
+const TOC_DO_TOI_DA = 8;
+const KHOANG_TRONG_TOI_THIEU = 120;
 let tocDoOng = 3;    // Tốc độ di chuyển của ống nước sang trái
-let khoangTrong = 220; // Khoảng cách (GAP) giữa ống trên và ống dưới (Màn 1: 220px)
+let khoangTrong = 220; // Khoảng cách (GAP) giữa ống trên và ống dưới
 let dangTamDung = false; // Trạng thái tạm dừng game
 let daThua = false;      // Trạng thái thua game
-let daThang = false;     // Trạng thái thắng game
 let dangChoi = false;    // Trạng thái game đang chạy (để phân biệt với lúc đếm ngược)
 let thoiGianTruoc = 0;   // Thời gian của frame trước đó
 
@@ -18,27 +18,26 @@ const gameContainer = document.getElementById('game-container'); // Khung chứa
 const chim = document.getElementById('bird'); // Khối chim
 const khungChuaOng = document.getElementById('pipes-container'); // Khối chứa các ống nước
 const diemHienTaiEl = document.getElementById('current-score'); // Nơi hiển thị điểm
+const tocDoHienTaiEl = document.getElementById('speed-display'); // Nơi hiển thị tốc độ
 const diemCaoNhatEl = document.getElementById('high-score');    // Nơi hiển thị kỷ lục
 
 // Màn hình
 const manHinhBatDau = document.getElementById('start-screen');
 const manHinhThua = document.getElementById('gameover-screen');
-const manHinhThang = document.getElementById('win-screen');
 
 // Chữ hiển thị / Overlay
 const lopPhuThongBao = document.getElementById('message-overlay');
 const chuThongBao = document.getElementById('message-text');
 const chuTamDung = document.getElementById('pause-indicator');
+const popupDoKho = document.getElementById('difficulty-popup');
 
 // Các nút
 const nutBatDau = document.getElementById('start-btn');
 const nutChoiLai = document.getElementById('restart-btn');
-const nutChoiLaiThang = document.getElementById('win-restart-btn');
 
 // Nơi hiển thị điểm khi game kết thúc
 const diemCuoiCungEl = document.getElementById('final-score');
 const kyLucCuoiCungEl = document.getElementById('final-high-score');
-const diemThangEl = document.getElementById('win-score');
 
 // Vòng lặp Game / Intervals
 let idVongLapGame; // ID của requestAnimationFrame
@@ -50,7 +49,7 @@ let danhSachOng = []; // Mảng chứa các đối tượng ống nước hiện
 const amThanhNhay = new Audio('./assets/jump.mp3');
 const amThanhDiem = new Audio('./assets/score.mp3');
 const amThanhThua = new Audio('./assets/gameover.mp3');
-const amThanhThang = new Audio('./assets/victory.mp3');
+const amThanhTangDoKho = new Audio('./assets/difficulty-up.mp3');
 
 // Hàm phát âm thanh an toàn (phòng trường hợp không có file sẽ không bị crash game)
 function phatAmThanh(audioEl) {
@@ -69,7 +68,6 @@ function khoiTao() {
     // Gán sự kiện click cho các nút
     nutBatDau.addEventListener('click', batDauGame);
     nutChoiLai.addEventListener('click', choiLai);
-    nutChoiLaiThang.addEventListener('click', choiLai);
 
     // Gán sự kiện điều khiển bàn phím và chuột
     document.addEventListener('keydown', xuLyPhimAn);
@@ -84,7 +82,7 @@ function xuLyPhimAn(e) {
     }
     if (e.code === 'KeyP') {
         // Nhấn P để tạm dừng hoặc tiếp tục
-        if (dangChoi && !daThua && !daThang) {
+        if (dangChoi && !daThua) {
             if (dangTamDung) tiepTucGame();
             else tamDungGame();
         }
@@ -106,7 +104,6 @@ function batDauGame() {
     // Ẩn tất cả các màn hình phụ
     manHinhBatDau.classList.add('hidden');
     manHinhThua.classList.add('hidden');
-    manHinhThang.classList.add('hidden');
     
     datLaiBien(); // Reset các thông số về mặc định
     hieuUngDemNguoc(chayGame); // Chạy đếm ngược rồi mới bắt đầu
@@ -117,12 +114,10 @@ function datLaiBien() {
     viTriChim = 250;
     vanTocChim = 0;
     diem = 0;
-    manChoi = 1;
     tocDoOng = 3;
-    khoangTrong = 220; // Màn 1 khoảng trống (GAP) là 220px
+    khoangTrong = 220; 
     dangTamDung = false;
     daThua = false;
-    daThang = false;
     dangChoi = false;
     danhSachOng = [];
     khungChuaOng.innerHTML = ''; // Xóa sạch ống nước cũ
@@ -130,6 +125,9 @@ function datLaiBien() {
     chim.style.top = viTriChim + 'px';
     chim.style.transform = `rotate(0deg)`; // Chỉnh đầu chim thẳng lại
     diemHienTaiEl.innerText = `Điểm: ${diem}`;
+    tocDoHienTaiEl.innerText = `Tốc độ: ${tocDoOng}x`;
+    popupDoKho.classList.add('hidden');
+    popupDoKho.classList.remove('fade-in-out');
 }
 
 // Hàm chơi lại gọi hàm bắt đầu game
@@ -169,7 +167,7 @@ function chayGame() {
 
 // Xử lý chim nhảy lên
 function nhayLen() {
-    if (!dangChoi || dangTamDung || daThua || daThang) return; // Không cho nhảy nếu game đã dừng
+    if (!dangChoi || dangTamDung || daThua) return; // Không cho nhảy nếu game đã dừng
     
     vanTocChim = -7; // Cung cấp lực nhảy hướng lên (âm là hướng lên do y gốc ở trên)
     phatAmThanh(amThanhNhay);
@@ -188,7 +186,7 @@ function capNhatChim(deltaTime) {
 
 // Hàm sinh ống nước ngẫu nhiên
 function taoOng() {
-    if (dangTamDung || daThua || daThang) return;
+    if (dangTamDung || daThua) return;
     
     const chieuCaoOngToiThieu = 50; // Tránh ống quá ngắn
     // Tính toán chiều cao tối đa của ống trên để đảm bảo đủ GAP và ống dưới không bị âm
@@ -334,51 +332,50 @@ function kiemTraVaCham() {
     return coVaCham;
 }
 
-// Xử lý cộng điểm và chuyển màn
+// Xử lý cộng điểm và tăng độ khó
 function capNhatDiem() {
     diem++;
     diemHienTaiEl.innerText = `Điểm: ${diem}`;
     phatAmThanh(amThanhDiem);
     
-    // Chuyển Màn 2 nếu đủ 10 điểm, Thắng nếu đủ 20 điểm
-    if (manChoi === 1 && diem >= 10) {
-        chuyenMan();
-    } else if (manChoi === 2 && diem >= 20) {
-        hienManHinhThang();
+    let doKhoTang = false;
+    
+    // Mỗi 5 điểm tăng tốc độ
+    if (diem > 0 && diem % 5 === 0) {
+        if (tocDoOng < TOC_DO_TOI_DA) {
+            tocDoOng = Math.min(tocDoOng + 0.5, TOC_DO_TOI_DA);
+            doKhoTang = true;
+        }
+    }
+    
+    // Mỗi 10 điểm giảm khoảng trống
+    if (diem > 0 && diem % 10 === 0) {
+        if (khoangTrong > KHOANG_TRONG_TOI_THIEU) {
+            khoangTrong = Math.max(khoangTrong - 5, KHOANG_TRONG_TOI_THIEU);
+            doKhoTang = true;
+        }
+    }
+    
+    if (doKhoTang) {
+        tangDoKho();
     }
 }
 
-// Logic chuyển màn chơi (Tăng độ khó)
-function chuyenMan() {
-    dangChoi = false;
-    cancelAnimationFrame(idVongLapGame);
+// Logic tăng độ khó
+function tangDoKho() {
+    tocDoHienTaiEl.innerText = `Tốc độ: ${tocDoOng}x`;
+    phatAmThanh(amThanhTangDoKho);
+    
+    // Hiện popup
+    popupDoKho.classList.remove('hidden', 'fade-in-out');
+    // Force reflow để animation có thể chạy lại
+    void popupDoKho.offsetWidth;
+    popupDoKho.classList.add('fade-in-out');
+    
+    // Cập nhật lại interval tạo ống dựa trên tốc độ
     clearInterval(idTaoOng);
-    
-    // Hiện thông báo chuyển màn có hiệu ứng zoom in/out
-    lopPhuThongBao.classList.remove('hidden');
-    chuThongBao.innerText = "===== MÀN 2 =====";
-    chuThongBao.classList.add('level-transition-effect');
-    
-    // Chờ 2 giây rồi tiếp tục
-    setTimeout(() => {
-        lopPhuThongBao.classList.add('hidden');
-        chuThongBao.classList.remove('level-transition-effect');
-        
-        // Cấu hình khó hơn cho Màn 2
-        manChoi = 2;
-        tocDoOng = 5;      // Tăng tốc
-        khoangTrong = 180; // GAP thu hẹp lại (Màn 2: 180px)
-        
-        // Dọn dẹp ống cũ
-        khungChuaOng.innerHTML = '';
-        danhSachOng = [];
-        
-        // Tiếp tục chạy vòng lặp
-        dangChoi = true;
-        thoiGianTruoc = performance.now();
-        idVongLapGame = requestAnimationFrame(vongLapGame);
-        idTaoOng = setInterval(taoOng, 1200); // Màn 2 ống xuất hiện nhanh hơn (1.2s)
-    }, 2000);
+    const intervalMoi = 4500 / tocDoOng;
+    idTaoOng = setInterval(taoOng, intervalMoi);
 }
 
 // Xử lý khi chim đập vào vật cản (Game Over)
@@ -405,23 +402,6 @@ function hienGameOver() {
     setTimeout(() => {
         manHinhThua.classList.remove('hidden');
     }, 500); 
-}
-
-// Xử lý khi phá đảo game
-function hienManHinhThang() {
-    daThang = true;
-    dangChoi = false;
-    cancelAnimationFrame(idVongLapGame);
-    clearInterval(idTaoOng);
-    
-    phatAmThanh(amThanhThang);
-    luuDiemCaoNhat();
-    
-    diemThangEl.innerText = diem;
-    
-    setTimeout(() => {
-        manHinhThang.classList.remove('hidden');
-    }, 500);
 }
 
 // Lưu điểm vào LocalStorage để không mất khi F5
@@ -455,12 +435,13 @@ function tiepTucGame() {
     chuTamDung.classList.add('hidden');
     thoiGianTruoc = performance.now();
     idVongLapGame = requestAnimationFrame(vongLapGame);
-    idTaoOng = setInterval(taoOng, manChoi === 1 ? 1500 : 1200);
+    const intervalMoi = 4500 / tocDoOng;
+    idTaoOng = setInterval(taoOng, intervalMoi);
 }
 
 // Hàm vòng lặp chính của game, gọi liên tục 60 khung hình/s
 function vongLapGame(thoiGianHienTai) {
-    if (dangTamDung || daThua || daThang) return;
+    if (dangTamDung || daThua) return;
     
     if (!thoiGianHienTai) thoiGianHienTai = performance.now();
     let deltaTime = (thoiGianHienTai - thoiGianTruoc) / (1000 / 60);
@@ -479,7 +460,7 @@ function vongLapGame(thoiGianHienTai) {
     }
     
     // Tiếp tục gọi hàm ở frame tiếp theo
-    if (dangChoi && !daThua && !daThang && !dangTamDung) {
+    if (dangChoi && !daThua && !dangTamDung) {
         idVongLapGame = requestAnimationFrame(vongLapGame);
     }
 }
