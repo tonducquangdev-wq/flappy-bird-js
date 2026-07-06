@@ -50,8 +50,22 @@ const amThanhNhay = new Audio('./assets/jump.mp3');
 const amThanhDiem = new Audio('./assets/score.mp3');
 const amThanhThua = new Audio('./assets/gameover.mp3');
 const amThanhTangDoKho = new Audio('./assets/difficulty-up.mp3');
+const nhacNen = new Audio('./assets/những bản nhạc mùa hè - playlist summer songs - jin..mp3');
 
-// Hàm phát âm thanh an toàn (phòng trường hợp không có file sẽ không bị crash game)
+// Cấu hình nhạc nền
+nhacNen.loop = true;
+nhacNen.volume = 0.3;
+
+// Hàm phát nhạc nền an toàn
+function phatNhacNen() {
+    if (nhacNen.paused) {
+        nhacNen.play().catch(e => {
+            console.log('Autoplay bị chặn, đợi người chơi tương tác');
+        });
+    }
+}
+
+// Hàm phát âm thanh ngắn an toàn
 function phatAmThanh(audioEl) {
     if (!audioEl) return;
     audioEl.currentTime = 0; // Trả về đầu file để phát nhanh
@@ -64,6 +78,14 @@ function phatAmThanh(audioEl) {
 function khoiTao() {
     taiDiemCaoNhat(); // Lấy điểm cao nhất từ localStorage
     diemCaoNhatEl.innerText = `Kỷ lục: ${diemCaoNhat}`;
+    
+    // Thử phát nhạc nền ngay khi tải
+    phatNhacNen();
+    
+    // Fallback phát nhạc nền khi người chơi tương tác lần đầu
+    document.addEventListener('click', phatNhacNen, { once: true });
+    document.addEventListener('touchstart', phatNhacNen, { once: true });
+    document.addEventListener('keydown', phatNhacNen, { once: true });
     
     // Gán sự kiện click cho các nút
     nutBatDau.addEventListener('click', batDauGame);
@@ -362,9 +384,23 @@ function capNhatDiem() {
 }
 
 // Logic tăng độ khó
+const CÂU_KHÍCH_LỆ = [
+    "CỐ LÊN FEN :3",
+    "SẮP TỚI RỒI 🔥",
+    "CHÓNG MẶT CHƯA? 😵",
+    "QUÁ DỮ DẰN! 😎",
+    "ĐỪNG BỎ CUỘC! 💪",
+    "TỐC ĐỘ BÀN THỜ! 🚀",
+    "ẢO THẬT ĐẤY! 🤯"
+];
+
 function tangDoKho() {
     tocDoHienTaiEl.innerText = `Tốc độ: ${tocDoOng}x`;
     phatAmThanh(amThanhTangDoKho);
+    
+    // Chọn câu ngẫu nhiên
+    const cauNgauNhien = CÂU_KHÍCH_LỆ[Math.floor(Math.random() * CÂU_KHÍCH_LỆ.length)];
+    popupDoKho.innerText = cauNgauNhien;
     
     // Hiện popup
     popupDoKho.classList.remove('hidden', 'fade-in-out');
