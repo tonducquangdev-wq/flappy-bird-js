@@ -50,7 +50,7 @@ const amThanhNhay = new Audio('./assets/jump.mp3');
 const amThanhDiem = new Audio('./assets/score.mp3');
 const amThanhThua = new Audio('./assets/gameover.mp3');
 const amThanhTangDoKho = new Audio('./assets/difficulty-up.mp3');
-const nhacNen = new Audio('./assets/những bản nhạc mùa hè - playlist summer songs - jin..mp3');
+const nhacNen = new Audio('./assets/nhacnen.mp3');
 
 // Cấu hình nhạc nền
 nhacNen.loop = true;
